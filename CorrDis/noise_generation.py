@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.signal as sig
 from random import gauss
 
 # TODO : check dimensions for 2D
@@ -142,3 +143,47 @@ def direct_2D(Lx, Ly, Sdx, Sdy, Nx, Ny=0):
             coord.append([dx[i, j], dy[i, j]])
 
     return np.array(coord)
+
+
+def corrective_2D(Lx, Ly, Sdx, Sdy, Nx, Ny=0):
+    """
+    This function generates a random corrective gaussian perturbation to Nx * Ny periodic positions
+
+    Args:
+        L (float): Correlation length of the perturbation (normalized by the period)
+        Sd (float): Standrd deviation of the perturbation (normalized by the period)
+        N (int): Number of positions
+
+    returns:
+        z (list): list of N perturbations
+    """
+
+    if not Ny:
+        Ny = Nx
+    z = np.zeros((Nx * Ny, 2))
+    x = np.array([[gauss(0, 1) for _ in range(Nx)] for y in range(Ny)])
+    y = np.array([[gauss(0, 1) for _ in range(Nx)] for y in range(Ny)])
+    
+    dx = np.zeros((Nx, Ny))
+    dy = np.zeros((Nx, Ny))
+
+    nb_neighbors_x = int(5*Lx)
+    nb_neighbors_y = int(5*Ly)
+    weightx = np.array([[np.exp(-(n_x**2+n_y**2)/(Lx))
+                        for n_x in range(-nb_neighbors_x, nb_neighbors_x)]
+                        for n_y in range(-nb_neighbors_y, nb_neighbors_y)])
+    weighty = np.array([[np.exp(-(n_x**2+n_y**2)/(Ly))
+                        for n_x in range(-nb_neighbors_x, nb_neighbors_x)]
+                        for n_y in range(-nb_neighbors_y, nb_neighbors_y)])
+
+    dx = sig.fftconvolve(x, weightx, mode="same")
+    dy = sig.fftconvolve(y, weighty, mode="same")
+
+    dx = dx * np.sqrt(Nx * Nx / np.sum(dx**2)) * Sdx
+    dy = dy * np.sqrt(Ny * Ny / np.sum(dy**2)) * Sdy
+
+    for i in range(Nx):
+        for j in range(Ny):
+            z[i*Ny + j] = ([dx[i, j], dy[i, j]])
+        
+    return z
