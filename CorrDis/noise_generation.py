@@ -167,17 +167,19 @@ def corrective_2D(Lx, Ly, Sdx, Sdy, Nx, Ny=0):
     dx = np.zeros((Nx, Ny))
     dy = np.zeros((Nx, Ny))
 
-    nb_neighbors_x = int(5*Lx)
-    nb_neighbors_y = int(5*Ly)
-    weightx = np.array([[np.exp(-(n_x**2+n_y**2)/(Lx))
+    
+    nb_neighbors_x = int(np.ceil(5*Lx))
+    nb_neighbors_y = int(np.ceil(5*Ly))
+    weightx = np.array([[np.exp(-(n_x**2+n_y**2)/(Lx)**2)
                         for n_x in range(-nb_neighbors_x, nb_neighbors_x)]
                         for n_y in range(-nb_neighbors_y, nb_neighbors_y)])
-    weighty = np.array([[np.exp(-(n_x**2+n_y**2)/(Ly))
+    weighty = np.array([[np.exp(-(n_x**2+n_y**2)/(Ly)**2)
                         for n_x in range(-nb_neighbors_x, nb_neighbors_x)]
                         for n_y in range(-nb_neighbors_y, nb_neighbors_y)])
 
     dx = sig.fftconvolve(x, weightx, mode="same")
     dy = sig.fftconvolve(y, weighty, mode="same")
+    
 
     dx = dx * np.sqrt(Nx * Nx / np.sum(dx**2)) * Sdx
     dy = dy * np.sqrt(Ny * Ny / np.sum(dy**2)) * Sdy
