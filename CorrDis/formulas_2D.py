@@ -178,6 +178,38 @@ def diffraction_figure_2D(pos, list_kx, list_ky, resolutionx, resolutiony, size=
 
     return F
 
+def diffraction_figure_3D(pos, list_kx, list_ky, k, resolutionx, resolutiony):
+    """
+    This function computes the diffraction figure along two directions of an array of points,
+    by computing its Fourier Transform
+
+    Args:
+        S_delta (function): how to compute the correlation standard deviation
+        Lc (float): Correlation length of the perturbation (normalized by the period)
+        Sd (float): Standard deviation of the perturbation (normalized by the period)
+        n_corr (int): which correlation halo term to compute
+        list_kx (list): list of directions in which to compute the intensity
+        N (int): Number of positions
+
+    returns:
+        (1D list): scattered intensity along two directions
+    """
+
+    kX, kY = np.meshgrid(list_kx, list_ky)
+    kZ = np.sqrt(np.maximum(k**2 - kX**2 - kY**2, 0)) + k
+
+
+    B = np.zeros((resolutiony, resolutionx), dtype=complex)
+
+    for i in range(0, len(pos)):
+        x, y, z = pos[i]
+        B = B + np.exp(2j * np.pi * x * kX) * np.exp(
+            2j * np.pi * y * kY) * np.exp(2j * np.pi * z * kZ)  # Hand computation of the FT of the points
+
+    F = ((np.abs(B) / len(pos))) ** 2
+
+    return F
+
 
 def avg_fig(
     S_delta,
